@@ -1,0 +1,1747 @@
+{
+  "info": {
+    "name": "EcoAssistant Search API - Музеи и Научные учреждения (русские ключи)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "TC-01: Сколько музеев? (поиск объектов)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"At least 7 objects found\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.objects.length).to.be.at.least(7);",
+              "});",
+              "",
+              "pm.test(\"All objects have 'Подтип объекта' containing 'Музеи'\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    jsonData.objects.forEach(function(obj) {",
+              "        pm.expect(obj.properties).to.have.property('Подтип объекта');",
+              "        var subtypes = Array.isArray(obj.properties['Подтип объекта']) ? obj.properties['Подтип объекта'] : [obj.properties['Подтип объекта']];",
+              "        pm.expect(subtypes).to.include('Музеи');",
+              "    });",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"system_parameters\": {\n    \"user_query\": \"Сколько музеев?\",\n    \"use_llm_answer\": false,\n    \"limit\": 20,\n    \"offset\": 0,\n    \"debug\": true\n  },\n  \"search_parameters\": {\n    \"object\": {\n      \"properties\": {\n        \"Подтип объекта\": \"Музеи\"\n      }\n    }\n  }\n}"
+        },
+        "url": {
+          "raw": "http://localhost/search/search/",
+          "protocol": "http",
+          "host": ["localhost"],
+          "path": ["search", "search"]
+        }
+      }
+    },
+    {
+      "name": "TC-02: Расскажи о музеях в Бодайбо (поиск текстовых ресурсов)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Object id is 6899 (Бодайбинский музей)\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    var object = jsonData.objects[0];",
+              "    pm.expect(object.id).to.equal(6899);",
+              "    pm.expect(object.db_id).to.equal(\"GEO_OBJ_123acf0dbc28\");",
+              "});",
+              "",
+              "pm.test(\"Object has correct properties\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    var props = jsonData.objects[0].properties;",
+              "    pm.expect(props['Детальное расположение']).to.equal(\"город Бодайбо, Иркутская область, Россия\");",
+              "    pm.expect(props['Подтип объекта']).to.include(\"Музеи\");",
+              "    pm.expect(props['Подтип объекта']).to.include(\"Достопримечательности\");",
+              "});",
+              "",
+              "pm.test(\"Response contains at least 1 resource\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.resources.length).to.be.at.least(1);",
+              "});",
+              "",
+              "pm.test(\"Resource has modality_type 'Текст'\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    jsonData.resources.forEach(function(resource) {",
+              "        pm.expect(resource.modality_type).to.equal(\"Текст\");",
+              "    });",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"system_parameters\": {\n    \"user_query\": \"Расскажи о музеях в Бодайбо\",\n    \"use_llm_answer\": false,\n    \"limit\": 10,\n    \"offset\": 0,\n    \"debug\": true\n  },\n  \"search_parameters\": {\n    \"object\": {\n      \"properties\": {\n        \"Подтип объекта\": \"Музеи\",\n        \"Детальное расположение\": \"город Бодайбо, Иркутская область, Россия\"\n      }\n    },\n    \"resource\": {\n      \"modality\": {\n        \"type\": \"Текст\"\n      }\n    },\n    \"modality_type\": \"Текст\"\n  }\n}"
+        },
+        "url": {
+          "raw": "http://localhost/search/search/",
+          "protocol": "http",
+          "host": ["localhost"],
+          "path": ["search", "search"]
+        }
+      }
+    },
+    {
+      "name": "TC-03: Научные учреждения около Байкала (подтип 'Наука')",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response contains objects with 'Подтип объекта' containing 'Наука'\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.objects.length).to.be.at.least(1);",
+              "    jsonData.objects.forEach(function(obj) {",
+              "        if (obj.properties && obj.properties['Подтип объекта']) {",
+              "            var subtypes = Array.isArray(obj.properties['Подтип объекта']) ? obj.properties['Подтип объекта'] : [obj.properties['Подтип объекта']];",
+              "            pm.expect(subtypes).to.include(\"Наука\");",
+              "        }",
+              "    });",
+              "});",
+              "",
+              "pm.test(\"Objects have 'Байкал' in location or name\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    var hasBaikal = jsonData.objects.some(function(obj) {",
+              "        var location = obj.properties && obj.properties['Детальное расположение'] ? obj.properties['Детальное расположение'] : '';",
+              "        var name = obj.properties && obj.properties.name ? obj.properties.name : '';",
+              "        var combined = (location + ' ' + name).toLowerCase();",
+              "        return combined.includes('байкал');",
+              "    });",
+              "    pm.expect(hasBaikal).to.be.true;",
+              "});",
+              "",
+              "pm.test(\"Response contains resources with modality_type 'Текст'\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    if (jsonData.resources && jsonData.resources.length > 0) {",
+              "        jsonData.resources.forEach(function(resource) {",
+              "            pm.expect(resource.modality_type).to.equal(\"Текст\");",
+              "        });",
+              "    }",
+              "});",
+              "",
+              "pm.test(\"Response time is acceptable\", function () {",
+              "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"system_parameters\": {\n    \"user_query\": \"Какие научные учреждения есть около Байкала?\",\n    \"use_llm_answer\": false,\n    \"limit\": 20,\n    \"offset\": 0,\n    \"debug\": true\n  },\n  \"search_parameters\": {\n    \"object\": {\n      \"properties\": {\n        \"Подтип объекта\": \"Наука\"\n      }\n    },\n    \"modality_type\": \"Текст\"\n  }\n}"
+        },
+        "url": {
+          "raw": "http://localhost/search/search/",
+          "protocol": "http",
+          "host": ["localhost"],
+          "path": ["search", "search"]
+        }
+      }
+    },
+    {
+      "name": "TC-04: Поиск заповедников на Байкале с фильтром по тексту",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Modality filter is 'Текст'\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.modality_filter).to.equal(\"Текст\");",
+              "});",
+              "",
+              "pm.test(\"Response contains at least 1 object with 'Подтип объекта' containing 'Заповедники'\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.objects.length).to.be.at.least(1);",
+              "    var hasZapovedniki = jsonData.objects.some(function(obj) {",
+              "        var subtypes = obj.properties['Подтип объекта'];",
+              "        if (!subtypes) return false;",
+              "        subtypes = Array.isArray(subtypes) ? subtypes : [subtypes];",
+              "        return subtypes.includes(\"Заповедники\");",
+              "    });",
+              "    pm.expect(hasZapovedniki).to.be.true;",
+              "});",
+              "",
+              "pm.test(\"All resources have modality_type 'Текст'\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.resources.length).to.be.at.least(1);",
+              "    jsonData.resources.forEach(function(resource) {",
+              "        pm.expect(resource.modality_type).to.equal(\"Текст\");",
+              "    });",
+              "});",
+              "",
+              "pm.test(\"Response contains only text resources (no geodata or images)\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    var hasNonText = jsonData.resources.some(function(resource) {",
+              "        return resource.modality_type !== \"Текст\";",
+              "    });",
+              "    pm.expect(hasNonText).to.be.false;",
+              "});",
+              "",
+              "pm.test(\"Response time is acceptable\", function () {",
+              "    pm.expect(pm.response.responseTime).to.be.below(10000);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"system_parameters\": {\n    \"user_query\": \"Какие заповедники есть на Байкале?\",\n    \"use_llm_answer\": false,\n    \"limit\": 6,\n    \"offset\": 0,\n    \"debug\": true\n  },\n  \"search_parameters\": {\n    \"object\": {\n      \"properties\": {\n        \"Подтип объекта\": \"Заповедники\"\n      }\n    }\n  }\n}"
+        },
+        "url": {
+          "raw": "http://localhost/search/search/",
+          "protocol": "http",
+          "host": ["localhost"],
+          "path": ["search", "search"]
+        }
+      }
+    },
+    {
+      "name": "TC-05: Поиск заказников на Байкале с фильтром по тексту",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Modality filter is 'Текст'\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.modality_filter).to.equal(\"Текст\");",
+              "});",
+              "",
+              "pm.test(\"Response contains at least 1 object with 'Подтип объекта' containing 'Заказники'\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.objects.length).to.be.at.least(1);",
+              "    var hasZakazniki = jsonData.objects.some(function(obj) {",
+              "        var subtypes = obj.properties['Подтип объекта'];",
+              "        if (!subtypes) return false;",
+              "        subtypes = Array.isArray(subtypes) ? subtypes : [subtypes];",
+              "        return subtypes.includes(\"Заказники\");",
+              "    });",
+              "    pm.expect(hasZakazniki).to.be.true;",
+              "});",
+              "",
+              "pm.test(\"All resources have modality_type 'Текст'\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.resources.length).to.be.at.least(1);",
+              "    jsonData.resources.forEach(function(resource) {",
+              "        pm.expect(resource.modality_type).to.equal(\"Текст\");",
+              "    });",
+              "});",
+              "",
+              "pm.test(\"Response contains only text resources (no geodata)\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    var hasGeoData = jsonData.resources.some(function(resource) {",
+              "        return resource.modality_type === \"Геоданные\";",
+              "    });",
+              "    pm.expect(hasGeoData).to.be.false;",
+              "});",
+              "",
+              "pm.test(\"Response time is acceptable\", function () {",
+              "    pm.expect(pm.response.responseTime).to.be.below(10000);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"system_parameters\": {\n    \"user_query\": \"Какие заказники есть на Байкале?\",\n    \"use_llm_answer\": false,\n    \"limit\": 6,\n    \"offset\": 0,\n    \"debug\": true\n  },\n  \"search_parameters\": {\n    \"object\": {\n      \"properties\": {\n        \"Подтип объекта\": \"Заказники\"\n      }\n    }\n  }\n}"
+        },
+        "url": {
+          "raw": "http://localhost/search/search/",
+          "protocol": "http",
+          "host": ["localhost"],
+          "path": ["search", "search"]
+        }
+      }
+    },
+    {
+      "name": "TC-06: Поиск достопримечательностей в Листвянке",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"At least 1 object found\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.objects.length).to.be.at.least(1);",
+              "});",
+              "",
+              "pm.test(\"All objects have location containing 'Листвянка'\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    jsonData.objects.forEach(function(obj) {",
+              "        var location = obj.properties['Детальное расположение'] || '';",
+              "        pm.expect(location.toLowerCase()).to.include('листвянка');",
+              "    });",
+              "});",
+              "",
+              "pm.test(\"All objects have 'Подтип объекта' containing 'Достопримечательности'\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    jsonData.objects.forEach(function(obj) {",
+              "        var subtypes = Array.isArray(obj.properties['Подтип объекта']) ? obj.properties['Подтип объекта'] : [obj.properties['Подтип объекта']];",
+              "        pm.expect(subtypes).to.include('Достопримечательности');",
+              "    });",
+              "});",
+              "",
+              "pm.test(\"Response time is acceptable\", function () {",
+              "    pm.expect(pm.response.responseTime).to.be.below(10000);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"system_parameters\": {\n    \"user_query\": \"Сколько достопримечательностей в Листвянке?\",\n    \"use_llm_answer\": false,\n    \"limit\": 20,\n    \"offset\": 0,\n    \"debug\": true\n  },\n  \"search_parameters\": {\n    \"object\": {\n      \"properties\": {\n        \"Подтип объекта\": \"Достопримечательности\",\n        \"Детальное расположение\": \"Листвянка\"\n      }\n    }\n  }\n}"
+        },
+        "url": {
+          "raw": "http://localhost/search/search/",
+          "protocol": "http",
+          "host": ["localhost"],
+          "path": ["search", "search"]
+        }
+      }
+    },
+    {
+      "name": "TC-07: Поиск достопримечательностей около села Баргузин (геопоиск с группировкой по геометрии)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response has correct structure\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('objects');",
+              "    pm.expect(jsonData).to.have.property('total_objects');",
+              "    pm.expect(jsonData).to.have.property('used_geometry');",
+              "    pm.expect(jsonData).to.have.property('place_name');",
+              "});",
+              "",
+              "pm.test(\"Place name is 'село баргузин'\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.place_name).to.equal('село баргузин');",
+              "});",
+              "",
+              "pm.test(\"At least 5 objects found\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.objects.length).to.be.at.least(5);",
+              "    pm.expect(jsonData.total_objects).to.be.at.least(5);",
+              "});",
+              "",
+              "pm.test(\"All objects have synonyms (display names)\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    jsonData.objects.forEach(function(obj) {",
+              "        pm.expect(obj.synonyms).to.be.an('array');",
+              "        pm.expect(obj.synonyms.length).to.be.at.least(1);",
+              "        var displayName = obj.synonyms[0];",
+              "        pm.expect(displayName).to.be.a('string');",
+              "        pm.expect(displayName.length).to.be.greaterThan(0);",
+              "    });",
+              "});",
+              "",
+              "pm.test(\"Used geometry is valid (Point or Polygon)\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    var geom = jsonData.used_geometry;",
+              "    pm.expect(geom.type).to.be.oneOf(['Point', 'Polygon', 'MultiPolygon']);",
+              "    if (geom.type === 'Point') {",
+              "        pm.expect(geom.coordinates.length).to.equal(2);",
+              "        pm.expect(geom.coordinates[0]).to.be.within(100, 115);",
+              "        pm.expect(geom.coordinates[1]).to.be.within(50, 60);",
+              "    }",
+              "});",
+              "",
+              "pm.test(\"Object with db_id OBJ_372c977dfbdf has correct synonym\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    var targetObj = jsonData.objects.find(function(obj) {",
+              "        return obj.db_id === 'OBJ_372c977dfbdf';",
+              "    });",
+              "    if (targetObj) {",
+              "        pm.expect(targetObj.synonyms).to.include('озеро арангатуй');",
+              "    }",
+              "});",
+              "",
+              "pm.test(\"Response time is acceptable\", function () {",
+              "    pm.expect(pm.response.responseTime).to.be.below(25000);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"place_name\": \"село баргузин\",\n  \"Подтип объекта\": [\"Достопримечательности\"],\n  \"buffer_radius_km\": 10.0,\n  \"limit\": 30,\n  \"offset\": 0,\n  \"search_type\": \"near\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost/search/search/place/objects",
+          "protocol": "http",
+          "host": ["localhost"],
+          "path": ["search", "search", "place", "objects"]
+        }
+      }
+    },
+    {
+      "name": "TC-08: Сколько музеев в Иркутске? (поиск объектов)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"system_parameters\": {\n    \"user_query\": \"Сколько музеев в Иркутске?\",\n    \"use_llm_answer\": false,\n    \"limit\": 20,\n    \"offset\": 0,\n    \"debug\": true\n  },\n  \"search_parameters\": {\n    \"object\": {\n      \"properties\": {\n        \"Подтип объекта\": \"Музеи\",\n        \"Детальное расположение\": \"Иркутск\"\n      }\n    }\n  }\n}"
+        },
+        "url": {
+          "raw": "http://localhost/search/search/",
+          "protocol": "http",
+          "host": ["localhost"],
+          "path": ["search", "search"]
+        }
+      }
+    },
+    {
+      "name": "TC-09: Сколько музеев в Братске? (поиск объектов)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response contains at least 3 museums in Bratsk\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.objects.length).to.be.at.least(3);",
+              "    jsonData.objects.forEach(function(obj) {",
+              "        var subtypes = Array.isArray(obj.properties['Подтип объекта']) ? obj.properties['Подтип объекта'] : [obj.properties['Подтип объекта']];",
+              "        pm.expect(subtypes).to.include('Музеи');",
+              "        var location = obj.properties['Детальное расположение'] || '';",
+              "        pm.expect(location.toLowerCase()).to.include('братск');",
+              "    });",
+              "});",
+              "",
+              "pm.test(\"Objects have correct subtypes (Музеи, Достопримечательности)\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    jsonData.objects.forEach(function(obj) {",
+              "        var subtypes = Array.isArray(obj.properties['Подтип объекта']) ? obj.properties['Подтип объекта'] : [obj.properties['Подтип объекта']];",
+              "        pm.expect(subtypes).to.include.members(['Музеи', 'Достопримечательности']);",
+              "    });",
+              "});",
+              "",
+              "pm.test(\"All objects have synonyms (display names)\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    jsonData.objects.forEach(function(obj) {",
+              "        pm.expect(obj.synonyms).to.be.an('array');",
+              "        pm.expect(obj.synonyms.length).to.be.at.least(1);",
+              "    });",
+              "});",
+              "",
+              "pm.test(\"Response contains text resources about Bratsk museums\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.resources.length).to.be.at.least(1);",
+              "    var hasMuseumResource = jsonData.resources.some(function(res) {",
+              "        var contentStr = JSON.stringify(res.content).toLowerCase();",
+              "        return contentStr.includes('музей') && (contentStr.includes('братск') || contentStr.includes('ангарская'));",
+              "    });",
+              "    pm.expect(hasMuseumResource).to.be.true;",
+              "});",
+              "",
+              "pm.test(\"All resources have modality_type 'Текст'\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    jsonData.resources.forEach(function(resource) {",
+              "        pm.expect(resource.modality_type).to.equal(\"Текст\");",
+              "    });",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"system_parameters\": {\n    \"user_query\": \"Сколько музеев в Братске?\",\n    \"use_llm_answer\": false,\n    \"limit\": 20,\n    \"offset\": 0,\n    \"debug\": true\n  },\n  \"search_parameters\": {\n    \"object\": {\n      \"properties\": {\n        \"Подтип объекта\": \"Музеи\",\n        \"Детальное расположение\": \"Братск\"\n      }\n    },\n    \"modality_type\": \"Текст\"\n  }\n}"
+        },
+        "url": {
+          "raw": "http://localhost/search/search/",
+          "protocol": "http",
+          "host": ["localhost"],
+          "path": ["search", "search"]
+        }
+      }
+    },
+    {
+      "name": "TC-10: Почему солнечную обсерваторию построили в Листвянке? (поиск текстовых ресурсов)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"system_parameters\": {\n    \"user_query\": \"Почему солнечную обсерваторию построили в Листвянке?\",\n    \"use_llm_answer\": false,\n    \"limit\": 10,\n    \"offset\": 0,\n    \"debug\": true\n  },\n  \"search_parameters\": {\n    \"modality_type\": \"Текст\",\n    \"object\": {\n      \"properties\": {\n        \"Подтип объекта\": \"Обсерватории\",\n        \"Детальное расположение\": \"Листвянка\"\n      }\n    },\n    \"resource\": {}\n  }\n}"
+        },
+        "url": {
+          "raw": "http://localhost/search/search/",
+          "protocol": "http",
+          "host": ["localhost"],
+          "path": ["search", "search"]
+        }
+      }
+    },
+    {
+      "name": "TC-17: Расскажи о Байкальском музее (поиск текстовых ресурсов)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Modality filter is 'Текст'\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.modality_filter).to.equal(\"Текст\");",
+              "});",
+              "",
+              "pm.test(\"Response contains Байкальский музей object\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.objects.length).to.be.at.least(1);",
+              "    var hasBaikalMuseum = jsonData.objects.some(function(obj) {",
+              "        return (obj.synonyms && obj.synonyms.some(function(s) {",
+              "            return s.toLowerCase().includes('байкальский музей');",
+              "        }));",
+              "    });",
+              "    pm.expect(hasBaikalMuseum).to.be.true;",
+              "});",
+              "",
+              "pm.test(\"Object has correct location (Листвянка)\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    var targetObj = jsonData.objects.find(function(obj) {",
+              "        return obj.synonyms && obj.synonyms.some(function(s) {",
+              "            return s.toLowerCase().includes('байкальский музей');",
+              "        });",
+              "    });",
+              "    if (targetObj && targetObj.properties) {",
+              "        var location = targetObj.properties['Детальное расположение'] || '';",
+              "        pm.expect(location.toLowerCase()).to.include('листвянка');",
+              "    }",
+              "});",
+              "",
+              "pm.test(\"Response contains at least 1 resource about Байкальский музей\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.resources.length).to.be.at.least(1);",
+              "});",
+              "",
+              "pm.test(\"Resource contains Байкальский музей in title or content\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    var hasMuseumContent = jsonData.resources.some(function(res) {",
+              "        var titleMatch = res.title && res.title.toLowerCase().includes('байкальский музей');",
+              "        var contentMatch = res.content && JSON.stringify(res.content).toLowerCase().includes('байкальский музей');",
+              "        return titleMatch || contentMatch;",
+              "    });",
+              "    pm.expect(hasMuseumContent).to.be.true;",
+              "});",
+              "",
+              "pm.test(\"Resource content contains information about museum (лимнологическая станция or экспозиция)\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    var hasInfo = jsonData.resources.some(function(res) {",
+              "        var contentStr = JSON.stringify(res.content).toLowerCase();",
+              "        return contentStr.includes('лимнологическая') || contentStr.includes('экспозиция');",
+              "    });",
+              "    pm.expect(hasInfo).to.be.true;",
+              "});",
+              "",
+              "pm.test(\"All resources have modality_type 'Текст'\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    jsonData.resources.forEach(function(resource) {",
+              "        pm.expect(resource.modality_type).to.equal(\"Текст\");",
+              "    });",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"system_parameters\": {\n    \"user_query\": \"Расскажи о Байкальском музее\",\n    \"use_llm_answer\": false,\n    \"limit\": 10,\n    \"offset\": 0,\n    \"debug\": true\n  },\n  \"search_parameters\": {\n    \"modality_type\": \"Текст\",\n    \"object\": {\n      \"name_synonyms\": {\n        \"ru_names\": [\"Байкальский музей\"]\n      },\n      \"properties\": {\n        \"Подтип объекта\": \"Музеи\"\n      }\n    },\n    \"resource\": {}\n  }\n}"
+        },
+        "url": {
+          "raw": "http://localhost/search/search/",
+          "protocol": "http",
+          "host": ["localhost"],
+          "path": ["search", "search"]
+        }
+      }
+    },
+    {
+      "name": "TC-18: Расскажи о Байкальском музее СО РАН (поиск текстовых ресурсов)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"system_parameters\": {\n    \"user_query\": \"Расскажи о Байкальском музее СО РАН\",\n    \"use_llm_answer\": false,\n    \"limit\": 10,\n    \"offset\": 0,\n    \"debug\": true\n  },\n  \"search_parameters\": {\n    \"modality_type\": \"Текст\",\n    \"object\": {\n      \"name_synonyms\": {\n        \"ru_names\": [\"Байкальский музей СО РАН\"]\n      },\n      \"properties\": {\n        \"Подтип объекта\": \"Музеи\"\n      }\n    },\n    \"resource\": {}\n  }\n}"
+        },
+        "url": {
+          "raw": "http://localhost/search/search/",
+          "protocol": "http",
+          "host": ["localhost"],
+          "path": ["search", "search"]
+        }
+      }
+    },
+    {
+      "name": "TC-19: Расскажи о Байкальском музее в Листвянке (поиск текстовых ресурсов)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"system_parameters\": {\n    \"user_query\": \"Расскажи о Байкальском музее в Листвянке\",\n    \"use_llm_answer\": false,\n    \"limit\": 10,\n    \"offset\": 0,\n    \"debug\": true\n  },\n  \"search_parameters\": {\n    \"modality_type\": \"Текст\",\n    \"object\": {\n      \"name_synonyms\": {\n        \"ru_names\": [\"Байкальский музей\"]\n      },\n      \"properties\": {\n        \"Подтип объекта\": \"Музеи\",\n        \"Детальное расположение\": \"Листвянка\"\n      }\n    },\n    \"resource\": {}\n  }\n}"
+        },
+        "url": {
+          "raw": "http://localhost/search/search/",
+          "protocol": "http",
+          "host": ["localhost"],
+          "path": ["search", "search"]
+        }
+      }
+    },
+    {
+      "name": "TC-20: Расскажи про Байкальский музей СО РАН в Листвянке (поиск текстовых ресурсов)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"system_parameters\": {\n    \"user_query\": \"Расскажи про Байкальский музей СО РАН в Листвянке\",\n    \"use_llm_answer\": false,\n    \"limit\": 10,\n    \"offset\": 0,\n    \"debug\": true\n  },\n  \"search_parameters\": {\n    \"modality_type\": \"Текст\",\n    \"object\": {\n      \"name_synonyms\": {\n        \"ru_names\": [\"Байкальский музей СО РАН\"]\n      },\n      \"properties\": {\n        \"Подтип объекта\": \"Музеи\",\n        \"Детальное расположение\": \"Листвянка\"\n      }\n    },\n    \"resource\": {}\n  }\n}"
+        },
+        "url": {
+          "raw": "http://localhost/search/search/",
+          "protocol": "http",
+          "host": ["localhost"],
+          "path": ["search", "search"]
+        }
+      }
+    },
+    {
+      "name": "TC-30: Расскажи о Иве (поиск текстовых ресурсов по названию растения)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Modality filter is 'Текст'\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.modality_filter).to.equal(\"Текст\");",
+              "});",
+              "",
+              "pm.test(\"Response contains at least 1 object with name containing 'ива'\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.objects.length).to.be.at.least(1);",
+              "    var hasIva = jsonData.objects.some(function(obj) {",
+              "        return obj.db_id.toLowerCase().includes('ива') ||",
+              "               (obj.synonyms && obj.synonyms.some(function(s) {",
+              "                   return s.toLowerCase().includes('ива');",
+              "               }));",
+              "    });",
+              "    pm.expect(hasIva).to.be.true;",
+              "});",
+              "",
+              "pm.test(\"Response contains at least 1 resource\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.resources.length).to.be.at.least(1);",
+              "});",
+              "",
+              "pm.test(\"All resources have modality_type 'Текст'\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    jsonData.resources.forEach(function(resource) {",
+              "        pm.expect(resource.modality_type).to.equal(\"Текст\");",
+              "    });",
+              "});",
+              "",
+              "pm.test(\"Response time is acceptable\", function () {",
+              "    pm.expect(pm.response.responseTime).to.be.below(10000);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"system_parameters\": {\n    \"user_query\": \"Расскажи о Иве\",\n    \"use_llm_answer\": false,\n    \"limit\": 10,\n    \"offset\": 0,\n    \"debug\": true\n  },\n  \"search_parameters\": {\n    \"object\": {\n      \"name_synonyms\": {\n        \"ru_names\": [\"ива\", \"ива козья\", \"ива остролистная\"]\n      }\n    },\n    \"modality_type\": \"Текст\"\n  }\n}"
+        },
+        "url": {
+          "raw": "http://localhost/search/search/",
+          "protocol": "http",
+          "host": ["localhost"],
+          "path": ["search", "search"]
+        }
+      }
+    },
+    {
+      "name": "TC-31: Расскажи о Иван-чае (поиск текстовых ресурсов по названию растения)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Modality filter is 'Текст'\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.modality_filter).to.equal(\"Текст\");",
+              "});",
+              "",
+              "pm.test(\"Response contains at least 1 object with name containing 'иван-чай'\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.objects.length).to.be.at.least(1);",
+              "    var hasIvanChai = jsonData.objects.some(function(obj) {",
+              "        return obj.db_id.toLowerCase().includes('иван-чай') ||",
+              "               (obj.synonyms && obj.synonyms.some(function(s) {",
+              "                   return s.toLowerCase().includes('иван-чай');",
+              "               }));",
+              "    });",
+              "    pm.expect(hasIvanChai).to.be.true;",
+              "});",
+              "",
+              "pm.test(\"Response contains at least 1 resource\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.resources.length).to.be.at.least(1);",
+              "});",
+              "",
+              "pm.test(\"All resources have modality_type 'Текст'\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    jsonData.resources.forEach(function(resource) {",
+              "        pm.expect(resource.modality_type).to.equal(\"Текст\");",
+              "    });",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"system_parameters\": {\n    \"user_query\": \"Расскажи о Иван-чае\",\n    \"use_llm_answer\": false,\n    \"limit\": 10,\n    \"offset\": 0,\n    \"debug\": true\n  },\n  \"search_parameters\": {\n    \"object\": {\n      \"name_synonyms\": {\n        \"ru_names\": [\"иван-чай\", \"кипрей\", \"копорский чай\"]\n      }\n    },\n    \"modality_type\": \"Текст\"\n  }\n}"
+        },
+        "url": {
+          "raw": "http://localhost/search/search/",
+          "protocol": "http",
+          "host": ["localhost"],
+          "path": ["search", "search"]
+        }
+      }
+    },
+    {
+      "name": "TC-32: Покажи иву около Бодайбо (поиск изображений)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Modality filter is 'Изображение'\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.modality_filter).to.equal(\"Изображение\");",
+              "});",
+              "",
+              "pm.test(\"Response contains at least 1 object with name related to 'ива'\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.objects.length).to.be.at.least(1);",
+              "});",
+              "",
+              "pm.test(\"Response contains resources with modality_type 'Изображение'\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.resources.length).to.be.at.least(1);",
+              "    var hasImage = jsonData.resources.some(function(resource) {",
+              "        return resource.modality_type === \"Изображение\";",
+              "    });",
+              "    pm.expect(hasImage).to.be.true;",
+              "});",
+              "",
+              "pm.test(\"Image content contains url or file_path\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    var imageResource = jsonData.resources.find(function(r) { return r.modality_type === \"Изображение\"; });",
+              "    if (imageResource && imageResource.content) {",
+              "        pm.expect(imageResource.content.url || imageResource.content.file_path).to.be.a.string;",
+              "    }",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"system_parameters\": {\n    \"user_query\": \"Покажи иву около Бодайбо\",\n    \"use_llm_answer\": false,\n    \"limit\": 10,\n    \"offset\": 0,\n    \"debug\": true\n  },\n  \"search_parameters\": {\n    \"object\": {\n      \"name_synonyms\": {\n        \"ru_names\": [\"ива\"]\n      },\n      \"properties\": {\n        \"Детальное расположение\": \"Бодайбо\"\n      }\n    },\n    \"modality_type\": \"Изображение\"\n  }\n}"
+        },
+        "url": {
+          "raw": "http://localhost/search/search/",
+          "protocol": "http",
+          "host": ["localhost"],
+          "path": ["search", "search"]
+        }
+      }
+    },
+    {
+      "name": "TC-33: Расскажи о музеях в Иркутске (поиск текстовых ресурсов)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response contains at least 1 object with 'Подтип объекта' containing 'Музеи'\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.objects.length).to.be.at.least(1);",
+              "    jsonData.objects.forEach(function(obj) {",
+              "        if (obj.properties && obj.properties['Подтип объекта']) {",
+              "            var subtypes = Array.isArray(obj.properties['Подтип объекта']) ? obj.properties['Подтип объекта'] : [obj.properties['Подтип объекта']];",
+              "            pm.expect(subtypes).to.include('Музеи');",
+              "        }",
+              "    });",
+              "});",
+              "",
+              "pm.test(\"All objects have location containing 'Иркутск'\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    jsonData.objects.forEach(function(obj) {",
+              "        var location = obj.properties['Детальное расположение'] || '';",
+              "        pm.expect(location.toLowerCase()).to.include('иркутск');",
+              "    });",
+              "});",
+              "",
+              "pm.test(\"Response contains resources with modality_type 'Текст'\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    if (jsonData.resources && jsonData.resources.length > 0) {",
+              "        jsonData.resources.forEach(function(resource) {",
+              "            pm.expect(resource.modality_type).to.equal('Текст');",
+              "        });",
+              "    }",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"system_parameters\": {\n    \"user_query\": \"Расскажи о музеях в Иркутске\",\n    \"use_llm_answer\": false,\n    \"limit\": 20,\n    \"offset\": 0,\n    \"debug\": true\n  },\n  \"search_parameters\": {\n    \"object\": {\n      \"properties\": {\n        \"Подтип объекта\": \"Музеи\",\n        \"Детальное расположение\": \"Иркутск\"\n      }\n    },\n    \"modality_type\": \"Текст\"\n  }\n}"
+        },
+        "url": {
+          "raw": "http://localhost/search/search/",
+          "protocol": "http",
+          "host": ["localhost"],
+          "path": ["search", "search"]
+        }
+      }
+    },
+    {
+      "name": "TC-34: Расскажи о Тонинии (поиск текстовых ресурсов по названию растения)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Modality filter is 'Текст'\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.modality_filter).to.equal(\"Текст\");",
+              "});",
+              "",
+              "pm.test(\"Response contains at least 1 object with name containing 'тониния'\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.objects.length).to.be.at.least(1);",
+              "    var hasTonia = jsonData.objects.some(function(obj) {",
+              "        return obj.db_id.toLowerCase().includes('тонин') ||",
+              "               (obj.synonyms && obj.synonyms.some(function(s) {",
+              "                   return s.toLowerCase().includes('тонин');",
+              "               }));",
+              "    });",
+              "    pm.expect(hasTonia).to.be.true;",
+              "});",
+              "",
+              "pm.test(\"Response contains at least 1 resource\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.resources.length).to.be.at.least(1);",
+              "});",
+              "",
+              "pm.test(\"All resources have modality_type 'Текст'\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    jsonData.resources.forEach(function(resource) {",
+              "        pm.expect(resource.modality_type).to.equal(\"Текст\");",
+              "    });",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"system_parameters\": {\n    \"user_query\": \"Расскажи о Тонинии\",\n    \"use_llm_answer\": false,\n    \"limit\": 10,\n    \"offset\": 0,\n    \"debug\": true\n  },\n  \"search_parameters\": {\n    \"object\": {\n      \"name_synonyms\": {\n        \"ru_names\": [\"тониния\", \"toninia\"]\n      }\n    },\n    \"modality_type\": \"Текст\"\n  }\n}"
+        },
+        "url": {
+          "raw": "http://localhost/search/search/",
+          "protocol": "http",
+          "host": ["localhost"],
+          "path": ["search", "search"]
+        }
+      }
+    },
+    {
+      "name": "TC-25: Покажи байкальский музей на карте (поиск по синониму с геоданными)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Modality filter is 'Геоданные'\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.modality_filter).to.equal(\"Геоданные\");",
+              "});",
+              "",
+              "pm.test(\"Response contains objects with 'Подтип объекта' containing 'Музеи'\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.objects.length).to.be.at.least(1);",
+              "    jsonData.objects.forEach(function(obj) {",
+              "        if (obj.properties && obj.properties['Подтип объекта']) {",
+              "            var subtypes = Array.isArray(obj.properties['Подтип объекта']) ? obj.properties['Подтип объекта'] : [obj.properties['Подтип объекта']];",
+              "            pm.expect(subtypes).to.include(\"Музеи\");",
+              "        }",
+              "    });",
+              "});",
+              "",
+              "pm.test(\"Response contains Байкальский музей (identifiable by synonyms)\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    var hasBaikalMuseum = jsonData.objects.some(function(obj) {",
+              "        return obj.synonyms && obj.synonyms.some(function(s) {",
+              "            return s.toLowerCase().includes('байкальский музей');",
+              "        });",
+              "    });",
+              "    pm.expect(hasBaikalMuseum).to.be.true;",
+              "});",
+              "",
+              "pm.test(\"Response contains geo resource with combined map\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.resources.length).to.be.at.least(1);",
+              "    var hasGeoResource = jsonData.resources.some(function(resource) {",
+              "        return resource.modality_type === \"Геоданные\" && resource.title && resource.title.includes('Общая карта');",
+              "    });",
+              "    pm.expect(hasGeoResource).to.be.true;",
+              "});",
+              "",
+              "pm.test(\"Map links are present in combined resource\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    var geoResource = jsonData.resources.find(function(r) { return r.modality_type === \"Геоданные\"; });",
+              "    pm.expect(geoResource).to.exist;",
+              "    pm.expect(geoResource.content).to.have.property('map_links');",
+              "    pm.expect(geoResource.content.map_links.static).to.be.a.string;",
+              "    pm.expect(geoResource.content.map_links.interactive).to.be.a.string;",
+              "    pm.expect(geoResource.content.map_links.static).to.include('/maps/');",
+              "    pm.expect(geoResource.content.map_links.interactive).to.include('/maps/');",
+              "});",
+              "",
+              "pm.test(\"Combined map title indicates number of objects\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    var geoResource = jsonData.resources.find(function(r) { return r.modality_type === \"Геоданные\"; });",
+              "    pm.expect(geoResource.title).to.match(/Общая карта \\(\\d+ объектов?\\)/);",
+              "});",
+              "",
+              "pm.test(\"Response time is acceptable\", function () {",
+              "    pm.expect(pm.response.responseTime).to.be.below(15000);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"system_parameters\": {\n    \"user_query\": \"Покажи байкальский музей на карте\",\n    \"use_llm_answer\": false,\n    \"limit\": 6,\n    \"offset\": 0,\n    \"debug\": true\n  },\n  \"search_parameters\": {\n    \"object\": {\n      \"name_synonyms\": {\n        \"ru_names\": [\"байкальский музей\"]\n      },\n      \"properties\": {\n        \"Подтип объекта\": \"Музеи\"\n      }\n    },\n    \"modality_type\": \"Геоданные\"\n  }\n}"
+        },
+        "url": {
+          "raw": "http://localhost/search/search/",
+          "protocol": "http",
+          "host": ["localhost"],
+          "path": ["search", "search"]
+        }
+      }
+    },
+    {
+      "name": "TC-26: Векторный поиск - старшие экскурсоводы Байкальского музея",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Modality filter is 'Текст'\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.modality_filter).to.equal(\"Текст\");",
+              "});",
+              "",
+              "pm.test(\"Response contains at least 1 resource from vector search\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.resources.length).to.be.at.least(1);",
+              "});",
+              "",
+              "pm.test(\"Found resource contains Клименко Ксения Николаевна\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    var content = jsonData.resources[0].content;",
+              "    var contentStr = JSON.stringify(content);",
+              "    pm.expect(contentStr).to.include(\"Клименко Ксения Николаевна\");",
+              "});",
+              "",
+              "pm.test(\"Found resource contains Нижегородцева Анна Владимировна\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    var contentStr = JSON.stringify(jsonData.resources[0].content);",
+              "    pm.expect(contentStr).to.include(\"Нижегородцева Анна Владимировна\");",
+              "});",
+              "",
+              "pm.test(\"Found resource contains Байкальский музей\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    var contentStr = JSON.stringify(jsonData.resources[0].content);",
+              "    pm.expect(contentStr.toLowerCase()).to.include(\"байкальский музей\");",
+              "});",
+              "",
+              "pm.test(\"Resource content contains info about экскурсоводы\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    var contentStr = JSON.stringify(jsonData.resources[0].content).toLowerCase();",
+              "    pm.expect(contentStr).to.include(\"экскурсовод\");",
+              "});",
+              "",
+              "pm.test(\"Response time is acceptable for vector search\", function () {",
+              "    pm.expect(pm.response.responseTime).to.be.below(8000);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"system_parameters\": {\n    \"user_query\": \"Кто является старшим экскурсоводом в Байкальском музее СО РАН?\",\n    \"use_llm_answer\": false,\n    \"limit\": 5,\n    \"offset\": 0,\n    \"debug\": true\n  },\n  \"search_parameters\": {\n    \"modality_type\": \"Текст\",\n    \"resource\": {}\n  }\n}"
+        },
+        "url": {
+          "raw": "http://localhost/search/search/",
+          "protocol": "http",
+          "host": ["localhost"],
+          "path": ["search", "search"]
+        }
+      }
+    },
+    {
+      "name": "TC-27: Поиск объектов ВНУТРИ геометрии Иркутска (памятники)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response has correct structure\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('objects');",
+              "    pm.expect(jsonData).to.have.property('total_objects');",
+              "    pm.expect(jsonData).to.have.property('used_geometry');",
+              "    pm.expect(jsonData).to.have.property('place_name');",
+              "});",
+              "",
+              "pm.test(\"Place name is 'Иркутск'\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.place_name).to.equal('Иркутск');",
+              "});",
+              "",
+              "pm.test(\"At least 1 object found with 'Подтип объекта' containing 'Памятники'\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.objects.length).to.be.at.least(1);",
+              "    jsonData.objects.forEach(function(obj) {",
+              "        var subtypes = Array.isArray(obj.properties['Подтип объекта']) ? obj.properties['Подтип объекта'] : [obj.properties['Подтип объекта']];",
+              "        pm.expect(subtypes).to.include('Памятники');",
+              "    });",
+              "});",
+              "",
+              "pm.test(\"Used geometry type is appropriate for city\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    var geom = jsonData.used_geometry;",
+              "    pm.expect(geom.type).to.be.oneOf(['Polygon', 'MultiPolygon', 'Point']);",
+              "});",
+              "",
+              "pm.test(\"Response time is acceptable\", function () {",
+              "    pm.expect(pm.response.responseTime).to.be.below(25000);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"place_name\": \"Иркутск\",\n  \"Подтип объекта\": [\"Памятники\"],\n  \"buffer_radius_km\": 10.0,\n  \"limit\": 30,\n  \"offset\": 0,\n  \"search_type\": \"inside\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost/search/search/place/objects",
+          "protocol": "http",
+          "host": ["localhost"],
+          "path": ["search", "search", "place", "objects"]
+        }
+      }
+    },
+    {
+      "name": "TC-28: Поиск объектов ВНУТРИ И ОКОЛО геометрии (озеро Байкал)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response has correct structure\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('objects');",
+              "    pm.expect(jsonData).to.have.property('total_objects');",
+              "    pm.expect(jsonData).to.have.property('used_geometry');",
+              "    pm.expect(jsonData).to.have.property('place_name');",
+              "});",
+              "",
+              "pm.test(\"Place name is 'байкал'\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.place_name).to.equal('байкал');",
+              "});",
+              "",
+              "pm.test(\"At least 5 objects found (both inside and near)\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.objects.length).to.be.at.least(5);",
+              "    pm.expect(jsonData.total_objects).to.be.at.least(5);",
+              "});",
+              "",
+              "pm.test(\"All objects have 'Подтип объекта' containing 'Достопримечательности'\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    jsonData.objects.forEach(function(obj) {",
+              "        var subtypes = Array.isArray(obj.properties['Подтип объекта']) ? obj.properties['Подтип объекта'] : [obj.properties['Подтип объекта']];",
+              "        pm.expect(subtypes).to.include('Достопримечательности');",
+              "    });",
+              "});",
+              "",
+              "pm.test(\"All objects have synonyms (display names)\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    jsonData.objects.forEach(function(obj) {",
+              "        pm.expect(obj.synonyms).to.be.an('array');",
+              "        pm.expect(obj.synonyms.length).to.be.at.least(1);",
+              "    });",
+              "});",
+              "",
+              "pm.test(\"All objects have map links\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    jsonData.objects.forEach(function(obj) {",
+              "        pm.expect(obj.properties).to.have.property('static_map');",
+              "        pm.expect(obj.properties).to.have.property('interactive_map');",
+              "    });",
+              "});",
+              "",
+              "pm.test(\"Used geometry is Polygon or MultiPolygon (lake)\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    var geom = jsonData.used_geometry;",
+              "    pm.expect(geom.type).to.be.oneOf(['Polygon', 'MultiPolygon']);",
+              "});",
+              "",
+              "pm.test(\"Buffer radius 1km applied correctly\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.total_objects).to.be.above(0);",
+              "});",
+              "",
+              "pm.test(\"Response time is acceptable\", function () {",
+              "    pm.expect(pm.response.responseTime).to.be.below(30000);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"place_name\": \"байкал\",\n  \"Подтип объекта\": [\"Достопримечательности\"],\n  \"buffer_radius_km\": 1.0,\n  \"limit\": 20,\n  \"offset\": 0,\n  \"search_type\": \"both\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost/search/search/place/objects",
+          "protocol": "http",
+          "host": ["localhost"],
+          "path": ["search", "search", "place", "objects"]
+        }
+      }
+    },
+    {
+      "name": "TC-29: Расскажи о нерпе (поиск текстовых ресурсов по названию животного)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Modality filter is 'Текст'\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.modality_filter).to.equal(\"Текст\");",
+              "});",
+              "",
+              "pm.test(\"Response contains at least 1 object with name 'нерпа'\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.objects.length).to.be.at.least(1);",
+              "    var hasNerpa = jsonData.objects.some(function(obj) {",
+              "        return obj.db_id.toLowerCase().includes('нерп') ||",
+              "               (obj.synonyms && obj.synonyms.some(function(s) {",
+              "                   return s.toLowerCase().includes('нерп');",
+              "               }));",
+              "    });",
+              "    pm.expect(hasNerpa).to.be.true;",
+              "});",
+              "",
+              "pm.test(\"Response contains at least 1 resource\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.resources.length).to.be.at.least(1);",
+              "});",
+              "",
+              "pm.test(\"All resources have modality_type 'Текст'\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    jsonData.resources.forEach(function(resource) {",
+              "        pm.expect(resource.modality_type).to.equal(\"Текст\");",
+              "    });",
+              "});",
+              "",
+              "pm.test(\"Response time is acceptable\", function () {",
+              "    pm.expect(pm.response.responseTime).to.be.below(10000);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"system_parameters\": {\n    \"user_query\": \"Расскажи о нерпе\",\n    \"use_llm_answer\": false,\n    \"limit\": 10,\n    \"offset\": 0,\n    \"debug\": true\n  },\n  \"search_parameters\": {\n    \"object\": {\n      \"name_synonyms\": {\n        \"ru_names\": [\"нерпа\", \"байкальская нерпа\"]\n      }\n    },\n    \"modality_type\": \"Текст\"\n  }\n}"
+        },
+        "url": {
+          "raw": "http://localhost/search/search/",
+          "protocol": "http",
+          "host": ["localhost"],
+          "path": ["search", "search"]
+        }
+      }
+    },
+    {
+      "name": "TC-30: Покажи на карте где растет лиственница сибирская (геоданные)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Modality filter is 'Геоданные'\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.modality_filter).to.equal(\"Геоданные\");",
+              "});",
+              "",
+              "pm.test(\"Response contains at least 1 object with synonyms containing 'лиственница сибирская'\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.objects.length).to.be.at.least(1);",
+              "    var hasLarch = jsonData.objects.some(function(obj) {",
+              "        return obj.synonyms && obj.synonyms.some(function(s) {",
+              "            return s.toLowerCase().includes('лиственница сибирская');",
+              "        });",
+              "    });",
+              "    pm.expect(hasLarch).to.be.true;",
+              "});",
+              "",
+              "pm.test(\"Response contains geo resource with combined map\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.resources.length).to.be.at.least(1);",
+              "    var hasGeoResource = jsonData.resources.some(function(resource) {",
+              "        return resource.modality_type === \"Геоданные\";",
+              "    });",
+              "    pm.expect(hasGeoResource).to.be.true;",
+              "});",
+              "",
+              "pm.test(\"Map links are present in geo resource\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    var geoResource = jsonData.resources.find(function(r) { return r.modality_type === \"Геоданные\"; });",
+              "    if (geoResource && geoResource.content && geoResource.content.map_links) {",
+              "        pm.expect(geoResource.content.map_links.static).to.be.a.string;",
+              "        pm.expect(geoResource.content.map_links.interactive).to.be.a.string;",
+              "        pm.expect(geoResource.content.map_links.static).to.include('/maps/');",
+              "        pm.expect(geoResource.content.map_links.interactive).to.include('/maps/');",
+              "    } else if (geoResource && geoResource.content && geoResource.content.geojson) {",
+              "        pm.expect(geoResource.content.geojson.type).to.be.oneOf(['Point', 'Polygon', 'MultiPolygon', 'LineString']);",
+              "    }",
+              "});",
+              "",
+              "pm.test(\"Response time is acceptable for geodata search\", function () {",
+              "    pm.expect(pm.response.responseTime).to.be.below(20000);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"system_parameters\": {\n    \"user_query\": \"Покажи на карте где растет лиственница сибирская\",\n    \"use_llm_answer\": false,\n    \"limit\": 20,\n    \"offset\": 0,\n    \"debug\": true\n  },\n  \"search_parameters\": {\n    \"object\": {\n      \"name_synonyms\": {\n        \"ru_names\": [\"лиственница сибирская\", \"larix sibirica\"]\n      }\n    },\n    \"modality_type\": \"Геоданные\"\n  }\n}"
+        },
+        "url": {
+          "raw": "http://localhost/search/search/",
+          "protocol": "http",
+          "host": ["localhost"],
+          "path": ["search", "search"]
+        }
+      }
+    },
+        {
+      "name": "TC-31: Покажи редкие объекты флоры и фауны есть на Байкале (place search с фильтром по свойствам)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response contains objects with 'Редкость' = 'Редкое'\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.objects.length).to.be.at.least(1);",
+              "    jsonData.objects.forEach(function(obj) {",
+              "        var rarity = obj.properties && obj.properties['Редкость'];",
+              "        pm.expect(rarity).to.equal('Редкое');",
+              "    });",
+              "});",
+              "",
+              "pm.test(\"All objects have property 'Расположение относительно Байкала' containing 'Байкала'\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    jsonData.objects.forEach(function(obj) {",
+              "        var location = obj.properties && obj.properties['Расположение относительно Байкала'];",
+              "        if (location) {",
+              "            pm.expect(location.toLowerCase()).to.include('байкал');",
+              "        }",
+              "    });",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"place_name\": \"Байкал\",\n  \"subtypes\": [\"Объект флоры и фауны\"],\n  \"buffer_radius_km\": 50,\n  \"limit\": 20,\n  \"offset\": 0,\n  \"search_type\": \"near\",\n  \"object_criteria\": {\n    \"properties\": {\n      \"Редкость\": \"Редкое\",\n      \"Расположение относительно Байкала\": \"рядом/около Байкала\"\n    }\n  }\n}"
+        },
+        "url": {
+          "raw": "http://localhost/search/search/place/objects",
+          "protocol": "http",
+          "host": ["localhost"],
+          "path": ["search", "search", "place", "objects"]
+        }
+      }
+    },
+    {
+      "name": "TC-32: Покажи редкие объекты на Байкале (place search с фильтром по свойствам и полигоном)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response contains objects with 'Редкость' = 'Редкое'\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.objects.length).to.be.at.least(1);",
+              "    jsonData.objects.forEach(function(obj) {",
+              "        var rarity = obj.properties && obj.properties['Редкость'];",
+              "        pm.expect(rarity).to.equal('Редкое');",
+              "    });",
+              "});",
+              "",
+              "pm.test(\"Place name is 'Байкал'\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.place_name).to.equal('Байкал');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"place_name\": \"Байкал\",\n  \"buffer_radius_km\": 10,\n  \"limit\": 20,\n  \"offset\": 0,\n  \"search_type\": \"inside\",\n  \"object_criteria\": {\n    \"properties\": {\n      \"Редкость\": \"Редкое\"\n    }\n  }\n}"
+        },
+        "url": {
+          "raw": "http://localhost/search/search/place/objects",
+          "protocol": "http",
+          "host": ["localhost"],
+          "path": ["search", "search", "place", "objects"]
+        }
+      }
+    },
+    {
+      "name": "TC-32: Покажи эндемиков Байкала (place search с фильтром по свойствам и полигоном)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response contains objects with 'Редкость' = 'Редкое'\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.objects.length).to.be.at.least(1);",
+              "    jsonData.objects.forEach(function(obj) {",
+              "        var rarity = obj.properties && obj.properties['Редкость'];",
+              "        pm.expect(rarity).to.equal('Редкое');",
+              "    });",
+              "});",
+              "",
+              "pm.test(\"Place name is 'Байкал'\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.place_name).to.equal('Байкал');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"place_name\": \"Байкал\",\n  \"buffer_radius_km\": 10,\n  \"limit\": 20,\n  \"offset\": 0,\n  \"search_type\": \"inside\",\n  \"object_criteria\": {\n    \"properties\": {\n      \"Редкость\": \"Редкое\"\n    }\n  }\n}"
+        },
+        "url": {
+          "raw": "http://localhost/search/search/place/objects",
+          "protocol": "http",
+          "host": ["localhost"],
+          "path": ["search", "search", "place", "objects"]
+        }
+      }
+    }
+  ]
+}

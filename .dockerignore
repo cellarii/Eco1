@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+*.pyo
+.git/
+.env
+*.log
+logs/
+.pytest_cache/
+images/
+maps/
+knowledge_base_scripts/Vector/faiss_index/
+embedding_models/

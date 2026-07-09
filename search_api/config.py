@@ -1,0 +1,37 @@
+import os
+from dataclasses import dataclass
+from pathlib import Path
+
+BASE_DIR = Path(__file__).parent.parent
+
+@dataclass(frozen=True)
+class SearchConfig:
+    db_name: str
+    db_user: str
+    db_password: str
+    db_host: str
+    db_port: str
+    redis_host: str
+    redis_port: int
+    redis_db: int
+    maps_dir: str
+    domain: str
+    embedding_model_path: str
+    faiss_index_path: str
+
+    @classmethod
+    def from_env(cls) -> 'SearchConfig':
+        return cls(
+            db_name=os.getenv('DB_NAME', 'eco'),
+            db_user=os.getenv('DB_USER', 'postgres'),
+            db_password=os.getenv('DB_PASSWORD'),
+            db_host=os.getenv('DB_HOST', 'localhost'),
+            db_port=os.getenv('DB_PORT', '5432'),
+            redis_host=os.getenv('REDIS_HOST', 'localhost'),
+            redis_port=int(os.getenv('REDIS_PORT', '6379')),
+            redis_db=int(os.getenv('REDIS_DB', '1')),
+            maps_dir=os.getenv('MAPS_DIR', '/app/maps'),
+            domain=os.getenv('PUBLIC_BASE_URL', 'http://localhost'),
+            embedding_model_path=os.getenv('EMBEDDING_MODEL_PATH', str(BASE_DIR / 'embedding_models' / 'bge-m3')),
+            faiss_index_path=os.getenv('FAISS_INDEX_PATH', str(BASE_DIR / 'knowledge_base_scripts' / 'Vector' / 'faiss_index'))
+        )

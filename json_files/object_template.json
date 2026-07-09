@@ -1,0 +1,43 @@
+{
+  "objects": [
+    {
+      "identificator": {
+        "db_id": "string"
+      },
+      "type": "string",
+      "name_synonyms": {
+        "ru_names": "array",
+        "scientific_names": "array",
+        "en_names": "array"
+      },
+      "properties": {
+        "_comment": "Все имена свойств - кириллица, как фактически хранится в object.object_properties и как их ищут DialogService/search_api (см. tasks/normalizaciya_registra_v_katalogah.md). Список ниже - не жёсткая схема, properties - произвольный словарь, но используйте именно эти имена для полей, по которым ищет бот.",
+
+        "Подтип объекта": "array",
+        "Географическая зона": "string",
+        "Детальное расположение": "string",
+        "Расположение относительно Байкала": "string",
+
+        "Тип ОФФ": "string",
+        "Редкость": "string",
+
+        "Вид (латинское название)": "string",
+        "Род (латинское название)": "string",
+        "Семейство (латинское название)": "string",
+        "Вид (русское название)": "string",
+        "Род (русское название)": "string",
+        "Семейство (русское название)": "string",
+
+        "_comment_ru_suffix": "Альтернативный вариант тех же трёх полей, встречается в части данных по флоре вместо '(русское название)' - оставлено как есть, оба варианта реально используются в БД:",
+        "Вид_ru": "string",
+        "Род_ru": "string",
+        "Семейство_ru": "string"
+      },
+      "object_relations": "array",
+      "object_relations[]": {
+        "db_id": "string",
+        "type": "string"
+      }
+    }
+  ]
+}
