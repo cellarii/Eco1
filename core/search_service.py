@@ -501,63 +501,83 @@ class SearchService:
 
     def resolve_object_synonym(self, object_name: str, object_type: str = "all") -> Dict[str, Any]:
         """
-        Разрешает синонимы объектов через БД (как в оригинальном коде).
+        Разрешает синонимы объектов и возвращает основное название и тип
         """
         if not object_name:
             return {"error": "Название объекта не указано"}
 
-        # --- Поиск в БД (новая модель) ---
         try:
-            from sqlalchemy import select
-            from search_api.infrastructure.orm.object_models import (
-                Object, ObjectNameSynonym, ObjectType, object_name_synonym_link
-            )
-            from search_api.infrastructure.database import get_session
-            
-            session = get_session()
-            try:
-                # Запрос: ищем объект по синониму (как в оригинале)
-                stmt = (
-                    select(Object, ObjectType.name)
-                    .join(ObjectType, Object.object_type_id == ObjectType.id)
-                    .join(object_name_synonym_link, object_name_synonym_link.c.object_id == Object.id)
-                    .join(ObjectNameSynonym, object_name_synonym_link.c.synonym_id == ObjectNameSynonym.id)
-                    .where(ObjectNameSynonym.synonym == object_name)
-                    .limit(1)
-                )
-                
-                result = session.execute(stmt)
-                row = result.first()
-                
-                if row:
-                    obj, obj_type_name = row
-                    
-                    # Проверяем тип объекта, если указан
-                    if object_type != "all" and obj_type_name != object_type:
-                        # Если тип не совпадает — ищем дальше
-                        pass
-                    else:
-                        return {
-                            "main_form": obj.db_id,
-                            "object_type": obj_type_name,
-                            "original_name": object_name,
-                            "resolved": True,
-                            "source": "database"
-                        }
-            finally:
-                session.close()
-                
-        except Exception as e:
-            logger.warning(f"Ошибка поиска синонима в БД: {e}")
+            if not hasattr(self, 'reverse_object_synonyms') or not self.reverse_object_synonyms:
+                logger.warning("Индекс синонимов объектов не построен")
+                return {
+                    "main_form": object_name,
+                    "object_type": object_type,
+                    "original_name": object_name,
+                    "resolved": False
+                }
 
-        # --- Если ничего не найдено ---
-        return {
-            "main_form": object_name,
-            "object_type": object_type,
-            "original_name": object_name,
-            "resolved": False,
-            "source": "none"
-        }
+            normalized_name = object_name.lower()
+
+            if normalized_name in self.reverse_object_synonyms:
+                matches = self.reverse_object_synonyms[normalized_name]
+
+                if object_type != "all":
+                    filtered_matches = [m for m in matches if m["type"] == object_type]
+                    if filtered_matches:
+                        return {
+                            "main_form": filtered_matches[0]["main_form"],
+                            "object_type": filtered_matches[0]["type"],
+                            "original_name": object_name,
+                            "resolved": True
+                        }
+
+                if matches:
+                    return {
+                        "main_form": matches[0]["main_form"],
+                        "object_type": matches[0]["type"],
+                        "original_name": object_name,
+                        "resolved": True
+                    }
+
+            if object_type != "all":
+                if object_type in self.object_synonyms:
+                    type_synonyms = self.object_synonyms[object_type]
+                    if isinstance(type_synonyms, dict):
+                        for main_form, synonyms in type_synonyms.items():
+                            if main_form.lower() == normalized_name:
+                                return {
+                                    "main_form": main_form,
+                                    "object_type": object_type,
+                                    "original_name": object_name,
+                                    "resolved": True
+                                }
+            else:
+                for obj_type, type_synonyms in self.object_synonyms.items():
+                    if isinstance(type_synonyms, dict):
+                        for main_form, synonyms in type_synonyms.items():
+                            if main_form.lower() == normalized_name:
+                                return {
+                                    "main_form": main_form,
+                                    "object_type": obj_type,
+                                    "original_name": object_name,
+                                    "resolved": True
+                                }
+
+            return {
+                "main_form": object_name,
+                "object_type": object_type,
+                "original_name": object_name,
+                "resolved": False
+            }
+
+        except Exception as e:
+            logger.error(f"Ошибка при разрешении синонима объекта '{object_name}': {str(e)}")
+            return {
+                "main_form": object_name,
+                "object_type": object_type,
+                "original_name": object_name,
+                "resolved": False
+            }
 
     def get_synonyms_for_name(self, name: str) -> Dict[str, Any]:
         """
@@ -593,23 +613,35 @@ class SearchService:
         return {"error": f"Название '{name}' не найдено в базе синонимов"}
 
     def get_object_descriptions(self, object_name: str, object_type: str = "all", in_stoplist: str = "1") -> List[str]:
-        """Получает все текстовые описания по названию объекта любого типа с учетом in_stoplist"""
+        # ===== ЛОГИРОВАНИЕ =====
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"🔍🔍🔍 get_object_descriptions CALLED:")
+        logger.info(f"   object_name: '{object_name}'")
+        logger.info(f"   object_type: '{object_type}' (type: {type(object_type)})")
+        logger.info(f"   in_stoplist: '{in_stoplist}'")
+        # =========================
+
         try:
             all_descriptions = []
 
             search_types = []
             if object_type == "all":
-                search_types = ["biological_entity", "geographical_entity", "modern_human_made","organization","research_project","volunteer_initiative","ancient_human_made"]
+                search_types = ["biological_entity", "geographical_entity", "modern_human_made", "organization", "research_project", "volunteer_initiative", "ancient_human_made"]
             else:
                 search_types = [object_type]
+
+            # ===== ЛОГИРОВАНИЕ search_types =====
+            logger.info(f"🔍 search_types: {search_types}")
+            # ===================================
 
             for entity_type in search_types:
                 descriptions = self.relational_service.get_object_descriptions(object_name, entity_type, in_stoplist=in_stoplist)
                 if descriptions:
                     all_descriptions.extend(descriptions)
 
+            logger.info(f"🔍 total descriptions found: {len(all_descriptions)}")
             return list(set(all_descriptions))
-
         except Exception as e:
             logger.error(f"Ошибка получения описания объекта '{object_name}': {str(e)}")
             return []

@@ -1,15 +1,29 @@
 import os
 import logging
-from fastapi import APIRouter, Form
+from fastapi import APIRouter, Depends, Form
+from pydantic import BaseModel
+from typing import Optional
+
 from fastapi_app.dependencies import get_relational_service
 from core.resource_update_service import ResourceUpdateService
-
-# Импортируем из app.config (как в Flask)
-from app.config import RESOURCES_DIST_PATH, IMAGES_DIR
+from fastapi_app.config import RESOURCES_DIST_PATH, IMAGES_DIR
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
+
+# ============================================================
+# Pydantic-схема запроса (Form-data)
+# ============================================================
+
+class ReloadDatabaseRequest(BaseModel):
+    reload_database: bool = True
+    incremental: bool = True
+
+
+# ============================================================
+# ЭНДПОИНТ: /reload_database
+# ============================================================
 
 @router.post("/reload_database")
 async def reload_database(

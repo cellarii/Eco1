@@ -15,3 +15,7 @@ MAPS_DIR = os.getenv("MAPS_DIR", str(BASE_DIR / "maps"))
 DOMAIN = os.getenv("PUBLIC_BASE_URL", "http://localhost")
 EMBEDDING_MODEL_PATH = str(BASE_DIR / "embedding_models" / os.getenv("EMBEDDING_MODEL", "bge-m3"))
 FAISS_INDEX_PATH = str(BASE_DIR / "knowledge_base_scripts" / "Vector" / "faiss_index")
+
+# Пути для работы с ресурсами
+RESOURCES_DIST_PATH = os.getenv("RESOURCES_DIST_PATH", str(BASE_DIR / "json_files" / "resources_dist.json"))
+IMAGES_DIR = os.getenv("IMAGES_DIR", str(BASE_DIR / "images"))

@@ -3,10 +3,15 @@ from core.search_service import SearchService
 from core.relational_service import RelationalService
 from core.geo_service import GeoService
 from infrastructure.db_utils_for_search import Slot_validator
+from fastapi_app.config import MAPS_DIR, DOMAIN, EMBEDDING_MODEL_PATH, FAISS_INDEX_PATH
+from search_api.infrastructure import init_db  # ← ДОБАВИТЬ
+from search_api.config import SearchConfig  # ← ДОБАВИТЬ
 
-from .config import MAPS_DIR, DOMAIN, EMBEDDING_MODEL_PATH, FAISS_INDEX_PATH
+# --- Инициализация БД (как в Flask) ---
+config = SearchConfig.from_env()
+init_db(config)  # ← КЛЮЧЕВОЙ МОМЕНТ!
 
-# --- Инициализация сервисов ---
+# --- 1. Инициализация сервисов ---
 geo = GeoProcessor(maps_dir=MAPS_DIR, domain=DOMAIN)
 slot_val = Slot_validator()
 
@@ -18,7 +23,7 @@ search_service = SearchService(
 )
 search_service.relational_service = relational_service
 
-# --- Функции для Depends ---
+# --- 2. Функции для внедрения зависимостей ---
 def get_geo_service():
     return geo
 

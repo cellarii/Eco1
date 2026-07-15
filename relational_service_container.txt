@@ -424,7 +424,7 @@ WHERE be.common_name_ru ~* %s;
         try:
             search_types = []
             if object_type == "all":
-                search_types = ["biological_entity", "geographical_entity", "modern_human_made", "organization", "research_project", "volunteer_initiative", "ancient_human_made"]
+                search_types = ["geographical_entity"]
             else:
                 search_types = [object_type]
             

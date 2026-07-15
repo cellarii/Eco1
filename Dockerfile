@@ -4,10 +4,13 @@ WORKDIR /app
 
 # Копируем зависимости
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt uvicorn[standard] supervisor
 
 # Копируем весь код
 COPY . .
 
-# Запускаем FastAPI
-CMD ["uvicorn", "main_fastapi:app", "--host", "0.0.0.0", "--port", "8000"]
+# Копируем конфиг supervisor
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+# Запускаем supervisor (он запустит Flask и FastAPI)
+CMD ["supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
